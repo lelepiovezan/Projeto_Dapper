@@ -1,0 +1,153 @@
+1- Forma de Conexão a Banco de dados (Acesso a dados) via ADO Puro - Não é usado no mercado apenas para aprendizado:
+
+const string connectionString = @"Server=LAPTOP-25EIIGT2\SQLEXPRESS;Database=baltanewcourse;User ID=sa;Password=2915;Trusted_Connection=False; TrustServerCertificate=True;";
+
+using (var connection = new SqlConnection(connectionString))
+{
+
+    Console.WriteLine("Conectado ao Banco");
+    connection.Open();
+
+    using (var command = new SqlCommand())
+    {
+        command.Connection = connection;
+        command.CommandType = System.Data.CommandType.Text;
+        command.CommandText = "SELECT [Id], [Title], [Summary] FROM [Category]";
+
+        var reader = command.ExecuteReader();
+
+        while (reader.Read())
+        {
+            Console.WriteLine($"{reader.GetGuid(0)} - {reader.GetString(1)} - {reader.GetString(2)}");
+
+        }
+    }
+}
+
+2 - Forma de conexão Dapper(Mais simplificado que o ADO puro):
+RESUMO Conection.Query para fazer consulta
+	 Conection.Execute para comandos insert.
+
+const string connectionString = @"Server=LAPTOP-25EIIGT2\SQLEXPRESS;Database=baltanewcourse;User ID=sa;Password=2915;Trusted_Connection=False; TrustServerCertificate=True;";
+
+
+//Otimizando o código abaixo usando o using dessa forma já é aberta(open) e fechada(close) a conexão.
+using (var connection = new SqlConnection(connectionString))
+{   
+
+    var categories = connection.Query<Category>("SELECT [ID],[Title] FROM Category");
+
+    foreach (var item in categories)
+    {
+
+        Console.WriteLine($"{item.ID} - {item.Title}");
+    }
+}
+
+
+3- Fazendo Insert Dapper:
+
+const string connectionString = @"Server=LAPTOP-25EIIGT2\SQLEXPRESS;Database=baltanewcourse;User ID=sa;Password=2915;Trusted_Connection=False; TrustServerCertificate=True;";
+
+
+//Alimentando as propriedades do objeto para fazer o insert
+var category = new Category(); // Criei uma classe com todas essas propriedades.
+category.ID = Guid.NewGuid();
+category.Title = "Amazon AWS";
+category.Url = "amazon";
+category.Description = "Categoria destinada a serviços AWS";
+category.Order = 8;
+category.Sumary = "AWS Cloud";
+category.Featured = false;
+
+//SQL Injection 
+var insertSql = @"INSERT INTO 
+                [Category] 
+                VALUES(
+                    @Id,
+                    @Title
+                    ,@Url
+                    ,@Sumary
+                    , @Order
+                    , @Description
+                    , @Featured)";
+
+
+//Otimizando o código abaixo usando o using dessa forma já é aberta(open) e fechada(close) a conexão.
+using (var connection = new SqlConnection(connectionString))
+{
+    var rows = connection.Execute(insertSql, new
+    {
+
+        category.ID,
+        category.Title,
+        category.Url,
+        category.Sumary,
+        category.Order,
+        category.Description,
+        category.Featured
+    });
+
+    Console.WriteLine($"{rows} Linhas inseridas");
+
+    var categories = connection.Query<Category>("SELECT [ID],[Title] FROM Category");
+
+    foreach (var item in categories)
+    {
+
+        Console.WriteLine($"{item.ID} - {item.Title}");
+    }
+}
+
+
+4 - Incluindo o metodo que faz o update:
+
+static void UpdateCategory(SqlConnection connection)
+{
+
+    var updateQuery = "UPDATE [category] SET [title]=@title WHERE [ID]=@id";
+
+    var row = connection.Execute(updateQuery, new
+    {
+        id = new Guid("AF3407AA-11AE-4621-A2EF-2028B85507C4"),
+        Title = "FrontEnd 2022"
+    });
+
+    Console.WriteLine($"{row} Linhas atualizadas");
+
+
+}
+
+5- Tudo explicado acima pode ser simplificado conforme o projeto Blog
+
+
+6- public class Repository<T> //Quer dizer que a classe é uma classe generica.
+
+
+7- Add pacotes do Dapper
+dotnet add package Microsoft.Data.SqlClient
+dotnet add package Dapper
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
